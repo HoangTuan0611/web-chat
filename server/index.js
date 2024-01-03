@@ -9,8 +9,13 @@ const socketIo = require("socket.io")(server, {
   },
 });
 
+let numUsers = 0;
+let usersConnected = [];
+
 socketIo.on("connection", (socket) => {
-  console.log("New client connected " + socket.id);
+  // usersConnected.push(socket)
+  
+  let addedUser = false;
 
   socket.emit("getId", socket.id);
 
@@ -18,9 +23,29 @@ socketIo.on("connection", (socket) => {
     socketIo.emit("sendDataServer", { data });
   });
 
+  socket.on("addUser", (username) => {
+    if (addedUser) return;
+
+    socket.username = username;
+    console.log(socket.username);
+    ++numUsers;
+    addedUser = true;
+    socket.emit("login", {
+      numUsers: numUsers,
+    });
+
+    socket.emit("user joined", {
+      username: socket.username,
+      numUsers: numUsers,
+    });
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected");
+    // usersConnected.splice(usersConnected.indexOf(socket), 1);
+    // console.log(usersConnected);
   });
+
 });
 
 server.listen(3000, () => {
