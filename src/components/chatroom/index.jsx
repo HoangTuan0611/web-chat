@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import socketIOClient from "socket.io-client";
-import '../App.css'
+import "../../App.css";
 
 const host = "http://localhost:3000";
 
-const ChatRoom = () => {
+const ChatRoom = (props) => {
   const [mess, setMess] = useState([]);
   const [message, setMessage] = useState("");
+  const [user, setUser] = useState();
   const [id, setId] = useState();
 
   const socketRef = useRef();
@@ -22,6 +23,10 @@ const ChatRoom = () => {
       setMess((oldMsgs) => [...oldMsgs, dataGot.data]);
     });
 
+    socketRef.current.on("addUser", (dataGot) => {
+      console.log("userList", dataGot);
+    });
+
     return () => {
       socketRef.current.disconnect();
     };
@@ -32,7 +37,7 @@ const ChatRoom = () => {
       key={index}
       className={`${m.id === id ? "your-message" : "other-people"} chat-item`}
     >
-      {m.content}
+      {m.username} said: {m.content}
     </div>
   ));
 
@@ -41,6 +46,7 @@ const ChatRoom = () => {
       const msg = {
         content: message,
         id: id,
+        username: user,
       };
       console.log(msg);
       socketRef.current.emit("sendDataClient", msg);
@@ -53,8 +59,27 @@ const ChatRoom = () => {
     setMessage(e.target.value);
   };
 
+  const handleChangeUser = (e) => {
+    setUser(e.target.value);
+  };
+
+  const addUser = () => {
+    console.log(user);
+    socketRef.current.emit("addUser", user);
+  };
+
   return (
     <div className="box-chat">
+      {/* <div className="title-box-chat">
+        <div className="title">Room</div>
+        <input
+          value={user}
+          className="user"
+          type="text"
+          onChange={handleChangeUser}
+        />
+        <button onClick={addUser}>Add</button>
+      </div> */}
       <div className="box-chat_message">{renderMess}</div>
 
       <div className="send-box">
